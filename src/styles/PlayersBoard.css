@@ -1,0 +1,40 @@
+.players-board {
+    /* Contains a title and a table, must be positioned to right-top corner*/
+    position: absolute;
+    top: 0px;
+    right: 0;
+}
+
+.players-board table {
+    /* Table of players */
+    width: 100%;
+    min-width: 300px;
+    border-collapse: collapse;
+}
+
+/* Rows must alternate color */
+.players-board table tr:nth-child(odd) {
+    background-color: #f5f5f5;
+}
+
+.players-board table tr:nth-child(even) {
+    background-color: #e5e5e5;
+}
+
+.players-board table td, .players-board table th {
+    /* Each cell must have a padding of 0.5rem */
+    padding: 0.2rem 2rem;
+    text-align: left;
+}
+
+.players-board table thead th {
+    /* The header must have a background color of #333 and a color of #fff */
+    background-color: #333;
+    color: #fff;
+}
+
+.players-board table tbody .you {
+    /* The row of the current player must have a background color of #333 and a color of #fff */
+    background-color: rgb(123, 123, 123);
+    color: #fff;
+}
