@@ -1,8 +1,12 @@
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
-import Card from './components/Card';
+import { Deck } from './components/Deck';
+import { Hand } from './components/Hand';
 import { PlayersBoard } from './components/PlayersBoard';
+import { Spinner } from './components/Spinner';
+import { Stack } from './components/Stack';
+import { UnoButton } from './components/UnoButton';
 import './styles/App.css';
 
 const webSocketUrl = "ws://localhost:4000";
@@ -148,75 +152,58 @@ function App() {
     };
   };
 
+  function handleDeckClick() {
+    if (draw === 0) {
+      webSocket.current.send(JSON.stringify({ event: "DRAW" }));
+    }
+    if (draw > 0) {
+      webSocket.current.send(JSON.stringify({ event: "DRAW" + draw }));
+    }
+
+    // set toDraw to 0
+    setDraw(0);
+  }
+
+  function handleUnoClick() {
+    webSocket.current.send(JSON.stringify({ event: "UNO" }));
+  }
+
   return (
     <div className="App">
-      <h1 className="uno-title">UNO</h1>
+      {/* Header */}
+      <div className="header">
+        <h1 className="uno-title">UNO</h1>
+        {
+          players.length > 0 &&
+          <PlayersBoard players={players} name={name} />
+        }
+      </div>
 
-      {/* Players board. Current player hilighted. */}
+      {/* Waiting for players */}
       {
-        players.length > 0 &&
-        <PlayersBoard players={players} name={name} />
-      }
-
-      { // Stack
-        players.length > 0
-          ? <div className="stack">
-            <h2>Stack</h2>
-            {stack.type === "wild" ? <h2>Color: {stack.color}</h2> : null}
-            <Card data={stack} />
-          </div>
-          : <p>Waiting for players...</p>
-      }
-
-      { // Deck
-        (() => {
-          // disabled if draw === 0, canPlayAnyCard() === false or turn === false
-          const disabled = (!turn || canPlayAnyCard()) && draw === 0;
-          function handleClick() {
-            if (draw === 0) {
-              webSocket.current.send(JSON.stringify({ event: "DRAW" }));
-            }
-            if (draw > 0) {
-              webSocket.current.send(JSON.stringify({ event: "DRAW" + draw }));
-            }
-
-            // set toDraw to 0
-            setDraw(0);
-          }
-          return <div className="deck">
-            <h2>Deck</h2>
-            {((!disabled && turn) || draw > 0) && <p>Click to draw {draw > 0 ? draw + " cards" : "a card"}</p>}
-
-            <Card data={{ type: "deck" }} disabled={disabled} onClick={handleClick} />
-          </div>
-        })()
-      }
-
-      {
-        // TODO: disable if cant play any card
-        // UNO button
-        <div className="UNO">
-          <h2>UNO</h2>
-          <button className="uno" disabled={hand.length !== 2 || !turn}>UNO</button>
+        players.length === 0 &&
+        <div className="waiting-for-players">
+          <h2>Waiting for players...</h2>
+          <Spinner size={70} />
         </div>
+      }
+
+      { // Table
+        players.length > 0 &&
+        <div className="table">
+          <Deck onClick={handleDeckClick} draw={draw} canPlayAnyCard={canPlayAnyCard} handleClick={handleDeckClick} turn={turn} />
+          <Stack stack={stack} />
+        </div>
+      }
+
+      { // UNO Button
+        players.length > 0 &&
+        <UnoButton canPlayAnyCard={canPlayAnyCard} hand={hand} onUnoClick={handleUnoClick} turn={turn} />
       }
 
       { // Hand
         hand.length > 0 &&
-        <div className="hand">
-          <h2>Hand of cards</h2>
-          {
-            hand.map((card, i) => {
-              let disabled = (card.type !== "wild" && card.color !== stack.color && card.value !== stack.value) || !turn || draw > 0;
-              const handleClick = (newCard) => {
-                setHand((hand) => hand.filter((_, index) => index !== i));
-                webSocket.current.send(JSON.stringify({ event: "PLAY", data: newCard || card }));
-                setTurn(false);
-              };
-              return <Card data={card} key={i} disabled={disabled} onClick={handleClick} />
-            })
-          }
-        </div>
+        <Hand cards={hand} draw={draw} setHand={setHand} webSocket={webSocket} stack={stack} turn={turn} setTurn={setTurn} />
       }
     </div>
   );

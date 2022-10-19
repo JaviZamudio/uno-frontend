@@ -1,7 +1,7 @@
 .players-board {
     /* Contains a title and a table, must be positioned to right-top corner*/
     position: absolute;
-    top: 0px;
+    top: 100%;
     right: 0;
 }
 
@@ -33,8 +33,13 @@
     color: #fff;
 }
 
-.players-board table tbody .you {
+.players-board table tbody .current {
     /* The row of the current player must have a background color of #333 and a color of #fff */
     background-color: rgb(123, 123, 123);
     color: #fff;
+}
+
+.players-board table tbody .you {
+    /* The text "You" must be displayed in the row of the current player */
+    font-weight: 600;
 }

@@ -1,0 +1,29 @@
+.hand {
+    /* padding: 1rem 2rem; */
+}
+
+.hand .title {
+ margin-left: 2rem;
+ /* margin-bottom: 1rem; */
+}
+
+.hand .cards {
+    display: flex;
+    align-self: center;
+    flex-wrap: wrap;
+    background: rgb(232, 232, 232);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.hand .cards .card {
+    margin: 0.2rem 0.5rem;
+    display: flex;
+    cursor: pointer;
+}
+
+.disabled {
+    opacity: 0.4;
+    cursor: not-allowed !important;
+
+}

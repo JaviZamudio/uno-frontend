@@ -14,8 +14,39 @@ body {
 .uno-title {
     font-size: 3rem;
     font-weight: 600;
-    color: #333;
-    /* margin-bottom: 1rem; */
-    margin: 1rem 0;
+    color: #fff;
     text-align: center;
 }
+
+.waiting-for-players {
+    /* Centered in the middle of the screen */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* The text must be centered */
+    text-align: center;
+    /* with vertical spacing between elements  */
+    line-height: 7rem;
+    /* Big text */
+    font-size: 1.6rem;
+}
+
+.header {
+    position: relative;
+    height: 5rem;
+    width: 100%;
+    background-color: rgb(31, 31, 31);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: space-evenly;
+    text-align: center;
+    width: 70%;
+}
+
