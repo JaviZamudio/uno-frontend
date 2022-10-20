@@ -1,3 +1,4 @@
+import { Alert } from '@mui/material';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ function App() {
   const [stack, setStack] = useState({});
   const [players, setPlayers] = useState([]); // {name: string, numCards: number, turn 0 | 1 | 2}[]. turn is 0: not turn, 1: turn, 2: next turn
   const [turn, setTurn] = useState(false);
+  const [notification, setNotification] = useState("");
   const [draw, setDraw] = useState(0);
   const name = useRef("");
   const webSocket = useRef(new WebSocket(webSocketUrl));
@@ -44,6 +46,7 @@ function App() {
     setStack({ type: "number", color: "red", value: "1" });
     setTurn(true);
     setDraw(0);
+    setNotification("Player 1 has drawn 2 cards");
   }, []);
 
   webSocket.current.onopen = () => {
@@ -204,6 +207,18 @@ function App() {
       { // Hand
         hand.length > 0 &&
         <Hand cards={hand} draw={draw} setHand={setHand} webSocket={webSocket} stack={stack} turn={turn} setTurn={setTurn} />
+      }
+
+      { // Notification
+        notification &&
+        <Alert severity='info' style={{
+          // styck bottom right
+          position: "fixed",
+          right: "10px",
+          bottom: "10px"
+        }}>
+          {notification}
+        </Alert>
       }
     </div>
   );
