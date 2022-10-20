@@ -1,9 +1,9 @@
-import { Alert } from '@mui/material';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import { Deck } from './components/Deck';
 import { Hand } from './components/Hand';
+import { Notifications } from './components/Notifications';
 import { PlayersBoard } from './components/PlayersBoard';
 import { Spinner } from './components/Spinner';
 import { Stack } from './components/Stack';
@@ -17,13 +17,17 @@ function App() {
   const [stack, setStack] = useState({});
   const [players, setPlayers] = useState([]); // {name: string, numCards: number, turn 0 | 1 | 2}[]. turn is 0: not turn, 1: turn, 2: next turn
   const [turn, setTurn] = useState(false);
-  const [notification, setNotification] = useState("");
+  const [notifications, setNotifications] = useState([]);
   const [draw, setDraw] = useState(0);
   const name = useRef("");
-  const webSocket = useRef(new WebSocket(webSocketUrl));
+  const webSocket = useRef();
 
   // First time loading
   useEffect(() => {
+    webSocket.current = new WebSocket(webSocketUrl);
+    webSocket.current.onopen = onOpen;
+    webSocket.current.onmessage = onMessage;
+    webSocket.current.onclose = onClose;
     // ask for name
     // name.current = prompt("What is your name?");
     // TODO: remove this:
@@ -46,10 +50,19 @@ function App() {
     setStack({ type: "number", color: "red", value: "1" });
     setTurn(true);
     setDraw(0);
-    setNotification("Player 1 has drawn 2 cards");
+    setNotifications(notifications => { return ["Welcome to UNO!", "It's your turn!"] });
   }, []);
 
-  webSocket.current.onopen = () => {
+  // Effect for the notifications to disappear after 5 seconds
+  useEffect(() => {
+    if (notifications.length > 0) {
+      setTimeout(() => {
+        setNotifications(notifications => { return notifications.slice(1) });
+      }, 3000);
+    }
+  }, [notifications]);
+
+  function onOpen () {
     console.log("Connected to server");
     // if !name send a random user name
     if (!name.current) {
@@ -58,7 +71,7 @@ function App() {
     webSocket.current.send(JSON.stringify({ event: "NAME", data: name.current }));
   };
 
-  webSocket.current.onclose = () => {
+  function onClose () {
     console.log("Disconnected from server");
   };
 
@@ -71,7 +84,7 @@ function App() {
     });
   }
 
-  webSocket.current.onmessage = ({ data: body }) => {
+  function onMessage ({ data: body }) {
     const { event, data } = JSON.parse(body);
     console.log(body);
 
@@ -91,8 +104,9 @@ function App() {
     }
 
     function handleTurn() { // get turn and set turn state
-      alert("Your turn");
+      console.log({ turn: data });
       setTurn(true);
+      setNotifications(notifications => { return [...notifications, "It's your turn!"] });
     }
 
     function handleDraw(data) { // get the cards Drawn and set the hand state
@@ -119,35 +133,35 @@ function App() {
         break;
       case "SKIP":
         if (data.player === name.current) {
-          alert("You have been skipped");
+          setNotifications(notifications => { return [...notifications, "You were skipped!"] });
         }
         break;
       case "DRAWN":
         if (data.player !== name.current) {
-          console.log(data);
+          setNotifications(notifications => { return [...notifications, `${data.player} drew ${data.numCards} cards!`] });
         }
         break;
       case "DRAW2":
         setDraw(2);
-        alert("Draw 2 cards");
+        setNotifications(notifications => { return [...notifications, `Draw ${data.numCards} cards!`] });
         break;
       case "DRAW4":
         setDraw(4);
-        alert("Draw 4 cards");
+        setNotifications(notifications => { return [...notifications, `Draw ${data.numCards} cards!`] });
         break;
       case "REVERSE":
-        alert("The order has been reversed");
+        setNotifications(notifications => { return [...notifications, `The direction was reversed!`] });
         break;
       case "WINNER":
         if (data.player === name.current) {
-          alert("You won!");
+          setNotifications(notifications => { return [...notifications, `You won!`] });
         }
         else {
-          alert(`${data.player} won!`);
+          setNotifications(notifications => { return [...notifications, `${data.player} won!`] });
         }
         break;
       case "UNO_PENALTY":
-        alert("You have been penalized for not saying UNO, draw 2 cards");
+        setNotifications(notifications => { return [...notifications, `You didn't say UNO!`] });
         setDraw(2);
         break;
       default:
@@ -210,15 +224,17 @@ function App() {
       }
 
       { // Notification
-        notification &&
-        <Alert severity='info' style={{
-          // styck bottom right
-          position: "fixed",
-          right: "10px",
-          bottom: "10px"
-        }}>
-          {notification}
-        </Alert>
+        // notification &&
+        // <Alert severity='info' style={{
+        //   // styck bottom right
+        //   position: "fixed",
+        //   right: "10px",
+        //   bottom: "10px"
+        // }}>
+        //   {notification}
+        // </Alert>
+        notifications.length > 0 &&
+        <Notifications notifications={notifications} />
       }
     </div>
   );
