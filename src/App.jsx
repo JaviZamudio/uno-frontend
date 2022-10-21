@@ -1,3 +1,4 @@
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
@@ -18,6 +19,7 @@ function App() {
   const [players, setPlayers] = useState([]); // {name: string, numCards: number, turn 0 | 1 | 2}[]. turn is 0: not turn, 1: turn, 2: next turn
   const [turn, setTurn] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [dialog, setDialog] = useState(null); // {title: string, text: string}
   const [draw, setDraw] = useState(0);
   const name = useRef("");
   const webSocket = useRef();
@@ -29,28 +31,7 @@ function App() {
     webSocket.current.onmessage = onMessage;
     webSocket.current.onclose = onClose;
     // ask for name
-    // name.current = prompt("What is your name?");
-    // TODO: remove this:
-    setPlayers([
-      { name: "Player 1", numCards: 7, turn: 0 },
-      { name: "Player 2", numCards: 7, turn: 1 },
-      { name: "Player 3", numCards: 7, turn: 2 },
-      { name: "Player 4", numCards: 7, turn: 0 },
-    ]);
-    name.current = "Player 3";
-    setHand([
-      { type: "number", color: "red", value: "1" },
-      { type: "number", color: "yellow", value: "2" },
-      { type: "number", color: "green", value: "3" },
-      { type: "number", color: "blue", value: "4" },
-      { type: "action", color: "red", value: "draw2" },
-      { type: "wild", color: "-", value: "wild" },
-      { type: "wild", color: "-", value: "wild" },
-    ]);
-    setStack({ type: "number", color: "red", value: "1" });
-    setTurn(true);
-    setDraw(0);
-    setNotifications(notifications => { return ["Welcome to UNO!", "It's your turn!"] });
+    name.current = prompt("What is your name?");
   }, []);
 
   // Effect for the notifications to disappear after 5 seconds
@@ -106,7 +87,7 @@ function App() {
     function handleTurn() { // get turn and set turn state
       console.log({ turn: data });
       setTurn(true);
-      setNotifications(notifications => { return [...notifications, "It's your turn!"] });
+      setDialog({ title: "Your turn", text: "It's your turn" });
     }
 
     function handleDraw(data) { // get the cards Drawn and set the hand state
@@ -114,7 +95,6 @@ function App() {
       setHand((hand) => [...data, ...hand]);
     }
 
-    // TODO: handle WINNER, UNO_PENALTY, UNO
     switch (event) {
       case "HAND":
         handleHand(data);
@@ -133,36 +113,42 @@ function App() {
         break;
       case "SKIP":
         if (data.player === name.current) {
-          setNotifications(notifications => { return [...notifications, "You were skipped!"] });
+          setDialog({ title: "Skip", text: "You have been skipped" });
         }
         break;
       case "DRAWN":
         if (data.player !== name.current) {
-          setNotifications(notifications => { return [...notifications, `${data.player} drew ${data.numCards} cards!`] });
+          setNotifications(notifications => { return [...notifications, `${data.player} drew ${data.amount} cards!`] });
         }
         break;
       case "DRAW2":
         setDraw(2);
-        setNotifications(notifications => { return [...notifications, `Draw ${data.numCards} cards!`] });
+        setDialog({ title: "Draw 2", text: "You have to draw 2 cards" });
         break;
       case "DRAW4":
         setDraw(4);
-        setNotifications(notifications => { return [...notifications, `Draw ${data.numCards} cards!`] });
+        setDialog({ title: "Draw 4", text: "You have to draw 4 cards" });
         break;
       case "REVERSE":
         setNotifications(notifications => { return [...notifications, `The direction was reversed!`] });
         break;
       case "WINNER":
+        const myDialog = {title: "Winner", text: `${data.player} won!`};
+
         if (data.player === name.current) {
-          setNotifications(notifications => { return [...notifications, `You won!`] });
+          myDialog.text = "You won!";
         }
-        else {
-          setNotifications(notifications => { return [...notifications, `${data.player} won!`] });
-        }
+
+        setDialog(myDialog);
         break;
       case "UNO_PENALTY":
-        setNotifications(notifications => { return [...notifications, `You didn't say UNO!`] });
+        setDialog({ title: "Uno Penalty", text: "You didn't say uno!" });
         setDraw(2);
+        break;
+      case "UNO":
+        if (data.player !== name.current) {
+          setNotifications(notifications => { return [...notifications, `${data.player} said uno!`] });
+        }
         break;
       default:
         console.log("Unknown event: " + event);
@@ -224,17 +210,23 @@ function App() {
       }
 
       { // Notification
-        // notification &&
-        // <Alert severity='info' style={{
-        //   // styck bottom right
-        //   position: "fixed",
-        //   right: "10px",
-        //   bottom: "10px"
-        // }}>
-        //   {notification}
-        // </Alert>
         notifications.length > 0 &&
         <Notifications notifications={notifications} />
+      }
+
+      { // Dialog
+        dialog &&
+        <Dialog open={dialog !== null} onClose={() => setDialog(null)}>
+          <DialogTitle>{dialog.title}</DialogTitle>
+          <DialogContent>
+            <DialogContentText>{dialog.text}</DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialog(null)} color="primary" autoFocus>
+              Ok
+            </Button>
+          </DialogActions>
+        </Dialog>
       }
     </div>
   );
