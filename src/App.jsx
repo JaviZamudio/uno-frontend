@@ -11,7 +11,7 @@ import { Stack } from './components/Stack';
 import { UnoButton } from './components/UnoButton';
 import './styles/App.css';
 
-const webSocketUrl = "ws://localhost:4000";
+const webSocketUrl = `ws://${window.location.hostname}:4000`;
 
 function App() {
   const [hand, setHand] = useState([]);
